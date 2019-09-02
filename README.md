@@ -7,3 +7,6 @@ koa 项目
 `koa2 appname`
 
 ### sequelize执行mysql操作
+
+### 添加ejs模板
+
