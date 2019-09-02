@@ -10,6 +10,7 @@ const cors = require('koa-cors');
 const index = require('./routes/index')
 const users = require('./routes/users')
 const pets = require("./routes/pet")
+const home = require("./routes/home")
 
 // error handler
 onerror(app)
@@ -26,7 +27,7 @@ app.use(require('koa-static')(__dirname + '/public'))
 app.use(cors());
 // 使用视图中间件
 app.use(views(__dirname + '/views', {
-  extension: 'pug'
+  extension: 'ejs'
 }))
 
 // logger
@@ -41,7 +42,8 @@ app.use(async (ctx, next) => {
 // routes
 app.use(index.routes(), index.allowedMethods())
 app.use(users.routes(), users.allowedMethods())
-app.use(pets.routes(),pets.allowedMethods())
+app.use(pets.routes(), pets.allowedMethods())
+app.use(home.routes(),home.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {

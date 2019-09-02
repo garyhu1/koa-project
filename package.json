@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "debug": "^4.1.1",
+    "ejs": "^2.6.2",
     "koa": "^2.7.0",
     "koa-bodyparser": "^4.2.1",
     "koa-convert": "^1.2.0",
@@ -22,7 +23,6 @@
     "koa-views": "^6.2.0",
     "mysql": "^2.17.1",
     "mysql2": "^1.7.0",
-    "pug": "^2.0.3",
     "sequelize": "^5.17.0"
   },
   "devDependencies": {
