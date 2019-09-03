@@ -7,6 +7,15 @@ const bodyparser = require('koa-bodyparser')
 const logger = require('koa-logger')
 const cors = require('koa-cors');
 const koaBody = require('koa-body');
+const jwt = require("jsonwebtoken");
+const jwtKoa = require("koa-jwt");
+const util = require("util");
+const redis = require("./config/redis");
+
+const verify = util.promisify(jwt.verify)
+
+// 配置文件
+const config = require("./config");
 
 const index = require('./routes/index')
 const users = require('./routes/users')
@@ -38,6 +47,34 @@ app.use(cors());
 // 使用视图中间件
 app.use(views(__dirname + '/views', {
   extension: 'ejs'
+}))
+// 自定义
+app.use(async (ctx,next) => {
+  let token = await redis.get("access_token");
+  if(token){// 为了防止验证token，此处把每个请求都设置下权限（正式环境需要用户设置）
+    ctx.header.authorization = "Bearer "+token;
+  }
+  await next();
+});
+app.use(async (ctx,next) => {
+  var token = ctx.headers.authorization;
+  if(token === undefined){
+    await next();
+  }else {
+    let data = await verify(token.split(' ')[1],config.secret);
+
+    //这一步是为了把解析出来的用户信息存入全局state中，这样在其他任一中间价都可以获取到state中的值
+    ctx.state = {
+      data:data
+    };
+    await next();
+  }
+})
+// 使用jwt验证
+app.use(jwtKoa({secret: config.secret}).unless({
+  path: [
+    /^\/users\/login/
+  ]       // 数组中的路径不需要通过jwt验证
 }))
 
 // logger

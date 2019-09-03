@@ -1,4 +1,9 @@
 const redis = require("../config/redis");
+const jwt = require("jsonwebtoken");
+const config = require("../config");
+const util = require("util");
+
+const verify = util.promisify(jwt.verify) // 解密
 
 class UserController {
 
@@ -18,7 +23,11 @@ class UserController {
                 }
             }else {
                 if(user.username === "garyhu" && user.password === "123456") {
-                    let token = user.username + "::" + user.password;
+                    let token = jwt.sign({
+                        username: user.username
+                    },config.secret,{
+                        expiresIn: '7d',    // 有效期为7天（以秒表示或描述时间跨度zeit / ms的字符串。如60，"2 days"，"10h"，"7d"，含义是：过期时间）
+                    });
                     let userStr = JSON.stringify(user);
                     await redis.set("access_token",token);
                     await redis.set("user",userStr)
@@ -55,6 +64,8 @@ class UserController {
      */
     static async prefile(ctx) {
         try{
+            let token = await redis.get("access_token");
+            let payload = await verify(token,config.secret)
             let userStr = await redis.get("user");
 
             let user = JSON.parse(userStr)
