@@ -27,7 +27,8 @@
     "koa-views": "^6.2.0",
     "mysql": "^2.17.1",
     "mysql2": "^1.7.0",
-    "sequelize": "^5.17.0"
+    "sequelize": "^5.17.0",
+    "svg-captcha": "^1.4.0"
   },
   "devDependencies": {
     "nodemon": "^1.19.1"

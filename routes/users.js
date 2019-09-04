@@ -13,6 +13,10 @@ router.get('/bar', function (ctx, next) {
 
 router.post("/login",UserController.login);
 
-router.get("/prefile",UserController.prefile)
+router.get("/prefile",UserController.prefile);
+
+router.get("/code",UserController.generateCode);
+
+router.get("/code2",UserController.obtainCode);
 
 module.exports = router
