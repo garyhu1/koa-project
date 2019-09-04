@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>登录</title>
+        <style >
+            #ll {
+                width: 300px;
+                height: 200px;
+                margin: 120px auto;
+                background: rgb(231, 152, 185);
+                border-radius: 10px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: #FFF;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="ll">
+            <form actions="/users/register" method="POST">
+                <label for="username">名称：<input type="text" name="username" id="username"/></label><br/><br/>
+                <label for="password">密码：<input type="password" name="password" id="password"/></label><br/><br/>
+                <input type="submit" style="width: 80px;height: 40px;" value="登录"/>
+            </form>
+        </div>
+    </body>
+</html>

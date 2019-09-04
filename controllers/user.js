@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const config = require("../config");
 const util = require("util");
 const svgCaptcha = require("svg-captcha");
+const Mail = require("../config/mail");
 
 const verify = util.promisify(jwt.verify) // 解密
 
@@ -127,6 +128,34 @@ class UserController {
         // 其中captcha中text是计算结果，data是图片
         ctx.response.type = 'image/svg+xml';
         ctx.body = captcha.data;
+    }
+
+    /**
+     * 注册
+     */
+    static async register(ctx){
+        let body = ctx.request.body;
+        console.log(JSON.stringify(body,null,4))
+        let mailAddr = body.email;
+        let link = "http://localhost:4005/users/verify";
+        let info = await Mail.send(mailAddr,link)
+        let msg = "";
+        if(info){
+            msg = `邮件发送成功，请前往邮箱验证${mailAddr}`
+        }else{
+            msg = '邮件发送失败'
+        }
+        await ctx.render("email_res",{
+            msg
+        });
+    }
+
+    /**
+     * 邮箱验证(验证完成后自动跳转到登录)
+     */
+    static async verifyMail(ctx) {
+        // TODO 此处向数据保存一个该邮箱已经验证的标志
+        await ctx.redirect("/users/login");
     }
 }
 
