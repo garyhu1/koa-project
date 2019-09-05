@@ -9,6 +9,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@alicloud/sms-sdk": "^1.1.6",
     "debug": "^4.1.1",
     "ejs": "^2.6.2",
     "ioredis": "^4.14.0",
