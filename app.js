@@ -22,6 +22,8 @@ const users = require('./routes/users')
 const pets = require("./routes/pet")
 const home = require("./routes/home")
 const file = require("./routes/file")
+const user = require("./routes/user")
+const project = require("./routes/project")
 
 // error handler
 onerror(app)
@@ -92,6 +94,8 @@ app.use(users.routes(), users.allowedMethods())
 app.use(pets.routes(), pets.allowedMethods())
 app.use(home.routes(),home.allowedMethods())
 app.use(file.routes(),file.allowedMethods())
+app.use(user.routes(),user.allowedMethods())
+app.use(project.routes(),project.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {
