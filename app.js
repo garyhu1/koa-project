@@ -52,24 +52,36 @@ app.use(views(__dirname + '/views', {
 }))
 // 自定义
 app.use(async (ctx,next) => {
+  // 如果是登录接口不需验证
+  // let path = ctx.path;
+  // console.log(path)
   let token = await redis.get("access_token");
+  // console.log(token)
   if(token){// 为了防止验证token，此处把每个请求都设置下权限（正式环境需要用户设置）
     ctx.header.authorization = "Bearer "+token;
+    await next();
   }
-  await next();
 });
 app.use(async (ctx,next) => {
   var token = ctx.headers.authorization;
   if(token === undefined){
     await next();
   }else {
-    let data = await verify(token.split(' ')[1],config.secret);
+    try{
+      let data = await verify(token.split(' ')[1],config.secret);
+      // console.log(JSON.stringify(data,null,4))
 
-    //这一步是为了把解析出来的用户信息存入全局state中，这样在其他任一中间价都可以获取到state中的值
-    ctx.state = {
-      data:data
-    };
-    await next();
+      //这一步是为了把解析出来的用户信息存入全局state中，这样在其他任一中间价都可以获取到state中的值
+      ctx.state = {
+        data:data
+      };
+      await next();
+    }catch (err){
+      console.log(JSON.stringify("err == ",err,null,4))
+      // 过期，验证失败重新登录
+      await redis.del("access_token")
+      await ctx.redirect("/users/login");
+    }
   }
 })
 // 使用jwt验证
