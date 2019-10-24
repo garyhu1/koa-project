@@ -17,6 +17,7 @@ const verify = util.promisify(jwt.verify)
 // 配置文件
 const config = require("./config");
 
+// 路由文件
 const index = require('./routes/index')
 const users = require('./routes/users')
 const pets = require("./routes/pet")
@@ -24,6 +25,7 @@ const home = require("./routes/home")
 const file = require("./routes/file")
 const user = require("./routes/user")
 const project = require("./routes/project")
+const httpSe = require("./routes/http_user")
 
 // error handler
 onerror(app)
@@ -53,12 +55,18 @@ app.use(views(__dirname + '/views', {
 // 自定义
 app.use(async (ctx,next) => {
   // 如果是登录接口不需验证
-  // let path = ctx.path;
-  // console.log(path)
+  let path = ctx.path;
+  console.log(path)
   let token = await redis.get("access_token");
-  // console.log(token)
-  if(token){// 为了防止验证token，此处把每个请求都设置下权限（正式环境需要用户设置）
-    ctx.header.authorization = "Bearer "+token;
+  console.log(token)
+  if(path !== "/users/login"){
+    if(token){// 为了防止验证token，此处把每个请求都设置下权限（正式环境需要用户设置）
+      ctx.header.authorization = "Bearer "+token;
+      await next();
+    }else {
+      await ctx.redirect("/users/login");
+    }
+  }else {
     await next();
   }
 });
@@ -108,6 +116,7 @@ app.use(home.routes(),home.allowedMethods())
 app.use(file.routes(),file.allowedMethods())
 app.use(user.routes(),user.allowedMethods())
 app.use(project.routes(),project.allowedMethods())
+app.use(httpSe.routes(),httpSe.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {
