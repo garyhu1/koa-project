@@ -1,4 +1,4 @@
-// 用于访问外部接口
+// 用于访问外部服务接口数据
 const http = require('http')
 
 module.exports = {
