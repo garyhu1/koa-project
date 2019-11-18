@@ -11,6 +11,8 @@ const jwt = require("jsonwebtoken");
 const jwtKoa = require("koa-jwt");
 const util = require("util");
 const redis = require("./config/redis");
+const session = require("koa-session");
+const sessConfig = require("./session");
 
 const verify = util.promisify(jwt.verify)
 
@@ -29,6 +31,10 @@ const httpSe = require("./routes/http_user")
 
 // error handler
 onerror(app)
+
+// 配置session
+app.keys = ["some secret hurr"] /*cookie的签名*/
+app.use(session(sessConfig,app));
 
 // middlewares
 // 使用文件上传中间件
