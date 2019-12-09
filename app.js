@@ -44,85 +44,85 @@ app.use(koaBody({
     maxFileSize: 200*1024*1024    // 设置上传文件大小最大限制，默认2M
   }
 }))
-// 该中间件要放到koa-body中间件之后，不然会导致post请求失败
-app.use(bodyparser({
-  enableTypes:['json', 'form', 'text']
-}))
-app.use(json())
-app.use(logger())
-// 加载静态资源文件中间件
-app.use(require('koa-static')(__dirname + '/public'))
-// 解决跨域问题
-app.use(cors());
-// 使用视图中间件
-app.use(views(__dirname + '/views', {
-  extension: 'ejs'
-}))
-// 自定义
-app.use(async (ctx,next) => {
-  // 如果是登录接口不需验证
-  let path = ctx.path;
-  console.log(path)
-  let token = await redis.get("access_token");
-  console.log(token)
-  if(path !== "/users/login"){
-    if(token){// 为了防止验证token，此处把每个请求都设置下权限（正式环境需要用户设置）
-      ctx.header.authorization = "Bearer "+token;
+  // 该中间件要放到koa-body中间件之后，不然会导致post请求失败
+  .use(bodyparser({
+    enableTypes:['json', 'form', 'text']
+  }))
+  .use(json())
+  .use(logger())
+  // 加载静态资源文件中间件
+  .use(require('koa-static')(__dirname + '/public'))
+  // 解决跨域问题
+  .use(cors())
+  // 使用视图中间件
+  .use(views(__dirname + '/views', {
+    extension: 'ejs'
+  }))
+  // 自定义
+  .use(async (ctx,next) => {
+    // 如果是登录接口不需验证
+    let path = ctx.path;
+    console.log(path)
+    let token = await redis.get("access_token");
+    console.log(token)
+    if(path !== "/users/login"){
+      if(token){// 为了防止验证token，此处把每个请求都设置下权限（正式环境需要用户设置）
+        ctx.header.authorization = "Bearer "+token;
+        await next();
+      }else {
+        await ctx.redirect("/users/login");
+      }
+    }else {
+      await next();
+    }
+  })
+  .use(async (ctx,next) => {
+    var token = ctx.headers.authorization;
+    if(token === undefined){
       await next();
     }else {
-      await ctx.redirect("/users/login");
+      try{
+        let data = await verify(token.split(' ')[1],config.secret);
+        // console.log(JSON.stringify(data,null,4))
+
+        //这一步是为了把解析出来的用户信息存入全局state中，这样在其他任一中间价都可以获取到state中的值
+        ctx.state = {
+          data:data
+        };
+        await next();
+      }catch (err){
+        console.log(JSON.stringify("err == ",err,null,4))
+        // 过期，验证失败重新登录
+        await redis.del("access_token")
+        await ctx.redirect("/users/login");
+      }
     }
-  }else {
-    await next();
-  }
-});
-app.use(async (ctx,next) => {
-  var token = ctx.headers.authorization;
-  if(token === undefined){
-    await next();
-  }else {
-    try{
-      let data = await verify(token.split(' ')[1],config.secret);
-      // console.log(JSON.stringify(data,null,4))
+  })
+  // 使用jwt验证
+  .use(jwtKoa({secret: config.secret}).unless({
+    path: [
+      /^\/users\/login/
+    ]       // 数组中的路径不需要通过jwt验证
+  }))
 
-      //这一步是为了把解析出来的用户信息存入全局state中，这样在其他任一中间价都可以获取到state中的值
-      ctx.state = {
-        data:data
-      };
-      await next();
-    }catch (err){
-      console.log(JSON.stringify("err == ",err,null,4))
-      // 过期，验证失败重新登录
-      await redis.del("access_token")
-      await ctx.redirect("/users/login");
-    }
-  }
-})
-// 使用jwt验证
-app.use(jwtKoa({secret: config.secret}).unless({
-  path: [
-    /^\/users\/login/
-  ]       // 数组中的路径不需要通过jwt验证
-}))
+  // logger
+  .use(async (ctx, next) => {
+    // 简单统计下每次请求的时间
+    const start = new Date()
+    await next()
+    const ms = new Date() - start
+    console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
+  })
 
-// logger
-app.use(async (ctx, next) => {
-  // 简单统计下每次请求的时间
-  const start = new Date()
-  await next()
-  const ms = new Date() - start
-  console.log(`${ctx.method} ${ctx.url} - ${ms}ms`)
-})
-
-// routes
-app.use(index.routes(), index.allowedMethods())
-app.use(users.routes(), users.allowedMethods())
-app.use(pets.routes(), pets.allowedMethods())
-app.use(home.routes(),home.allowedMethods())
-app.use(file.routes(),file.allowedMethods())
-app.use(user.routes(),user.allowedMethods())
-app.use(project.routes(),project.allowedMethods())
-app.use(httpSe.routes(),httpSe.allowedMethods())
+  // routes
+  .use(index.routes(), index.allowedMethods())
+  .use(users.routes(), users.allowedMethods())
+  .use(pets.routes(), pets.allowedMethods())
+  .use(home.routes(),home.allowedMethods())
+  .use(file.routes(),file.allowedMethods())
+  .use(user.routes(),user.allowedMethods())
+  .use(project.routes(),project.allowedMethods())
+  .use(httpSe.routes(),httpSe.allowedMethods())
 
 // error-handling
 app.on('error', (err, ctx) => {
